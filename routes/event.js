@@ -66,4 +66,37 @@ router.post('/checkin/:eventId/:userId', auth(['admin']), async (req, res) => {
   }
 });
 
+router.get('/export/:eventId', auth(['admin']), async (req, res) => {
+  try {
+    const event= await Event.findById(req.params.eventId).populate('attendees.userId', 'name email studentId'); // Populate userId
+    if(!event) return res.status(404).json({ error: 'Event not found' });
+
+    const format= req.query.format || 'json';
+
+    if(!event.attendees || event.attendees.length === 0) {
+      return res.status(404).json({ error: 'No attendees found' });
+    }
+
+    const data= event.attendees.map(a => ({
+      name: a.userId ? a.userId.name : 'Unknown',
+      email: a.userId ? a.userId.email : 'Unknown',
+      studentId: a.userId ? a.userId.studentId : 'Unknown',
+      checkedIn: a.checkedIn,
+    }));
+
+    if(format === 'csv') {
+      const parser= new Parser();
+      const csv= parser.parse(data);
+      res.header('Content-Type', 'text/csv');
+      res.attachment(`${event.title.replace(/\s+/g, '_')}_attendees.csv`);
+      return res.send(csv);
+    } else {
+      return res.json(data);
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports= router;
