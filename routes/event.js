@@ -15,6 +15,8 @@ router.get('/secure',verifyToken,(req, res) => {
 router.post('/register/:id',auth(['student']),async (req, res) => {
   try {
     const event= await Event.findById(req.params.id);
+    if(!event) return res.status(404).json({ error: 'Event not found' });
+
     const existing= event.attendees.find(a => a.userId === req.user.id);
     if(existing) return res.status(400).json({ error: 'Already registered' });
 
@@ -49,6 +51,8 @@ router.post('/register/:id',auth(['student']),async (req, res) => {
 router.post('/checkin/:eventId/:userId', auth(['admin']), async (req, res) => {
   try {
     const event= await Event.findById(req.params.eventId);
+    if(!event) return res.status(404).json({ error: 'Event not found' });
+
     const attendee= event.attendees.find(a => a.userId === req.params.userId);
     if(!attendee) return res.status(404).json({ error: 'User not found in attendees' });
 
