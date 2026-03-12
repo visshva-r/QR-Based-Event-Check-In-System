@@ -13,11 +13,9 @@ const app= express();
 app.use(cors());
 app.use(express.json());
 
-// ——— Quick Test Route ———
 app.get('/api/test', (req, res) => {
-  res.json({ message: 'API is working!' });
+  res.status(200).json({ message: "API is awake and working perfectly!" });
 });
-// ————————————————
 
 // Routes
 app.use('/api/auth',authRoutes);
