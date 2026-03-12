@@ -8,6 +8,14 @@ const QRCode= require('qrcode');
 const nodemailer= require('nodemailer');
 const User= require('../models/User');
 
+const transporter= nodemailer.createTransport({
+      service:'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
 router.get('/secure',verifyToken,(req, res) => {
     res.json({ message:'Protected route access granted!', user: req.user });
 });
@@ -26,19 +34,25 @@ router.post('/register/:id',auth(['student']),async (req, res) => {
     await event.save();
 
     const user= await User.findById(req.user.id);
-    const transporter= nodemailer.createTransport({
-      service:'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
 
+    // We send the QR code as an attachment and link it using "cid"
     await transporter.sendMail({
       from: 'noreply@example.com',
       to: user.email,
       subject: 'Event Registration',
-      html: `<p>You have registered for ${event.title}</p><img src="${qrCode}" />`,
+      html: `
+        <h2>You are registered!</h2>
+        <p>You have successfully registered for ${event.title}.</p>
+        <p>Please present the QR code below at the entrance for check-in:</p>
+        <img src="cid:event-qrcode" alt="Your QR Code" />
+      `,
+      attachments: [
+        {
+          filename: 'qrcode.png',
+          path: qrCode,          // Nodemailer automatically parses the base64 string!
+          cid: 'event-qrcode'    // This MUST match the src="cid:..." in the HTML above
+        }
+      ]
     });
 
     res.json({ message:'Registered', qrCode });

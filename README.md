@@ -1,42 +1,42 @@
-# QR-Based Event Check-In System
+# 🎟️ QR-Based Event Check-In System (Backend API)
 
-This backend system manages college event registrations and check-ins using QR codes. Users receive a QR code on successful registration, and organizers can scan it to mark attendance.
-
-##  Technologies Used
-- **Backend:** Node.js, Express.js
-- **Database:** MongoDB + Mongoose
-- **Authentication:** JWT
-- **QR Code Generator:** qrcode (npm)
-- **Emailing:** Nodemailer
-- **Documentation:** Postman
+A robust Node.js/Express backend system designed to manage campus event registrations and secure check-ins. The system dynamically generates unique QR code tickets, automatically dispatches them via email, and provides a secure scanning endpoint for event administrators.
 
 ---
 
-##  Features
-
-### 1. Authentication & Roles
-- Register and login (JWT)
-- Roles: `student` and `admin`
-
-### 2. Event Management
-- Admins can create events.
-- Students can register for events.
-- Generates and emails a QR code upon registration.
-
-### 3. Check-in System
-- Admin can scan QR to mark attendance.
-- Prevents duplicate check-ins.
-
-### 4. Admin Dashboard
-- View all attendees.
-- Track who has checked in.
-- Export attendee list (JSON or CSV).
+## 🚀 Key Engineering Highlights
+* **Dynamic Media Generation:** Engineered on-the-fly QR code generation linking MongoDB `user_ids` and `event_ids` for secure attendee verification.
+* **Automated Email Dispatch:** Overcame standard email client Base64 image blocking by utilizing **Nodemailer** with embedded Content-ID (CID) attachments to reliably deliver QR tickets directly to user inboxes.
+* **Secure Role-Based Access (RBAC):** Implemented custom **JWT middleware** to strictly separate `student` registration routes from `admin` check-in and data export routes.
+* **Data Extraction:** Built an admin endpoint utilizing `json2csv` to instantly compile and export real-time attendee check-in data.
 
 ---
 
-##  Setup Instructions
+## ✨ Features
+✅ **Authentication:** Secure Student and Admin login via JWT.
+✅ **Event Management:** Admins can create and manage event details.
+✅ **Automated Ticketing:** Students register and instantly receive a custom QR code via email.
+✅ **Secure Scanner API:** Check-in endpoint validates the QR payload against the database to prevent duplicate entries.
+✅ **Admin Dashboard API:** Export live attendee lists to JSON or CSV formats.
 
-1. **Clone the repository:**
+---
+
+## 🧠 Tech Stack
+| Layer | Technology |
+|:------|:------------|
+| **Runtime** | Node.js |
+| **Framework** | Express.js |
+| **Database** | MongoDB Atlas |
+| **ODM** | Mongoose |
+| **Authentication**| JSON Web Tokens (JWT) & bcryptjs |
+| **Email Service** | Nodemailer |
+| **Utilities** | qrcode, json2csv |
+
+---
+
+## 🛠️ Local Setup Instructions
+
+**1. Clone the repository:**
 ```bash
-git clone https://github.com/<your-username>/QR-Based-Event-Check-In-System.git
+git clone [https://github.com/visshva-r/QR-Based-Event-Check-In-System.git](https://github.com/visshva-r/QR-Based-Event-Check-In-System.git)
 cd QR-Based-Event-Check-In-System
