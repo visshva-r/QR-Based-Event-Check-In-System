@@ -16,6 +16,16 @@ const transporter= nodemailer.createTransport({
       },
     });
 
+// Get all events
+router.get('/', async (req, res) => {
+  try {
+    const events = await Event.find();
+    res.json(events);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 router.get('/secure',verifyToken,(req, res) => {
     res.json({ message:'Protected route access granted!', user: req.user });
 });
