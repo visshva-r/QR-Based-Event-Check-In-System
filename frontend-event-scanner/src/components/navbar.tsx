@@ -14,7 +14,7 @@ export default function Navbar() {
     setIsAdmin(userRole === 'admin');
   }, [pathname]);
 
-  if (pathname === '/') return null;
+  if (pathname === '/' || pathname === '/register') return null;
 
   return (
     <nav className="bg-white border-b-8 border-black py-5 px-10 sticky top-0 z-50">

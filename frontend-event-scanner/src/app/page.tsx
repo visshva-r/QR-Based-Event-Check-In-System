@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import toast, { Toaster } from 'react-hot-toast';
 import api from '@/lib/api';
 
@@ -22,10 +23,11 @@ export default function LoginPage() {
       // 2. Extract token and user from response
       const { token, user } = response.data;
 
-      // 3. Save token, email, and role to localStorage (role from JWT for secure admin check)
+      // 3. Save token, email, role, and userId to localStorage (role from JWT for secure admin check)
       localStorage.setItem('token', token);
       localStorage.setItem('userEmail', email);
       localStorage.setItem('userRole', user?.role || 'student');
+      if (user?.id) localStorage.setItem('userId', user.id);
       
       toast.success('Login successful!');
 
@@ -87,6 +89,13 @@ export default function LoginPage() {
             {loading ? 'Authenticating...' : 'Enter System'}
           </button>
         </form>
+
+        <p className="text-center text-sm font-bold text-black mt-4">
+          Don&apos;t have an account?{' '}
+          <Link href="/register" className="underline decoration-4 hover:decoration-black">
+            Sign Up
+          </Link>
+        </p>
       </div>
     </div>
   );
