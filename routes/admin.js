@@ -11,11 +11,13 @@ router.post('/create',auth(['admin']), async (req, res) => {
 
 router.get('/attendees/:id',auth(['admin']), async (req, res) => {
   const event= await Event.findById(req.params.id);
+  if (!event) return res.status(404).json({ error: 'Event not found' });
   res.json({ attendees: event.attendees });
 });
 
 router.get('/export/:id',auth(['admin']), async (req, res) => {
   const event= await Event.findById(req.params.id);
+  if (!event) return res.status(404).json({ error: 'Event not found' });
   const parser= new Parser();
   const csv= parser.parse(event.attendees);
   res.header('Content-Type', 'text/csv');

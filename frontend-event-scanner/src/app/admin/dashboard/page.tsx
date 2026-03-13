@@ -1,115 +1,84 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
 import api from '@/lib/api';
-
-interface Attendee {
-  userId: string;
-  checkedIn: boolean;
-  _id: string;
-}
-
-interface Event {
-  _id: string;
-  title: string;
-  attendees: Attendee[];
-}
+import ProtectedRoute from '@/components/protected_route';
 
 export default function AdminDashboard() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchData = async () => {
-    try {
-      const res = await api.get('/events');
-      setEvents(res.data);
-    } catch (err) {
-      toast.error('Failed to load attendee data');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [events, setEvents] = useState<any[]>([]);
+  const [stats, setStats] = useState({ total: 0, checkedIn: 0 });
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await api.get('/events');
+        setEvents(res.data);
+        let total = 0, checked = 0;
+        res.data.forEach((e: any) => {
+          total += e.attendees.length;
+          checked += e.attendees.filter((a: any) => a.checkedIn).length;
+        });
+        setStats({ total, checkedIn: checked });
+      } catch (err) { console.error(err); }
+    };
     fetchData();
-    // Optional: Refresh every 10 seconds to show live scans
-    const interval = setInterval(fetchData, 10000);
-    return () => clearInterval(interval);
+    const inv = setInterval(fetchData, 5000);
+    return () => clearInterval(inv);
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <Toaster position="top-center" />
-      
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Control Panel</h1>
-          <button 
-            onClick={() => window.location.href = '/admin/scanner'}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-          >
-            Open Scanner 📷
-          </button>
-        </div>
+    <ProtectedRoute requireAdmin={true}>
+      <div className="min-h-screen bg-white p-10">
+        <div className="max-w-[1400px] mx-auto">
+          
+          <header className="mb-16">
+            <h1 className="text-8xl font-black italic uppercase tracking-tighter text-black">Overview</h1>
+            <div className="w-48 h-4 bg-black mt-2"></div>
+          </header>
 
-        {loading ? (
-          <p>Loading records...</p>
-        ) : (
-          <div className="space-y-10">
-            {events.map((event) => (
-              <div key={event._id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="px-6 py-4 bg-gray-100 border-b border-gray-200">
-                  <h2 className="text-xl font-bold text-gray-800">{event.title}</h2>
-                  <p className="text-sm text-gray-500">Total Registrations: {event.attendees.length}</p>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="bg-gray-50 text-gray-600 text-sm uppercase">
-                        <th className="px-6 py-4 font-semibold">Student ID</th>
-                        <th className="px-6 py-4 font-semibold">Status</th>
-                        <th className="px-6 py-4 font-semibold text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {event.attendees.map((attendee) => (
-                        <tr key={attendee._id} className="hover:bg-blue-50/50 transition-colors">
-                          <td className="px-6 py-4 font-mono text-xs text-gray-600">
-                            {attendee.userId}
-                          </td>
-                          <td className="px-6 py-4">
-                            {attendee.checkedIn ? (
-                              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold uppercase">
-                                Checked In
-                              </span>
-                            ) : (
-                              <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold uppercase">
-                                Pending
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                             <button className="text-gray-400 hover:text-gray-600">Details</button>
-                          </td>
-                        </tr>
-                      ))}
-                      {event.attendees.length === 0 && (
-                        <tr>
-                          <td colSpan={3} className="px-6 py-10 text-center text-gray-400">
-                            No students registered for this event yet.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ))}
+          {/* 3-COLUMN GRID: This fixes the "stretched" look */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-20">
+            <StatBox label="Total Registered" value={stats.total} />
+            <StatBox label="Checked In" value={stats.checkedIn} />
+            <StatBox label="Attendance %" value={`${stats.total > 0 ? Math.round((stats.checkedIn / stats.total) * 100) : 0}%`} />
           </div>
-        )}
+
+          <section>
+            <h2 className="text-3xl font-black uppercase mb-8 underline decoration-8">Live Entry Logs</h2>
+            <div className="border-[6px] border-black rounded-3xl overflow-hidden shadow-[15px_15px_0px_0px_rgba(0,0,0,1)]">
+              <table className="w-full text-left">
+                <thead className="bg-black text-white uppercase text-xs tracking-widest">
+                  <tr>
+                    <th className="p-6">User Hash ID</th>
+                    <th className="p-6 text-right">Verification Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y-4 divide-black">
+                  {events.flatMap(e => e.attendees).map((a: any) => (
+                    <tr key={a._id} className="hover:bg-zinc-50 font-bold">
+                      <td className="p-6 font-mono text-sm">{a.userId}</td>
+                      <td className="p-6 text-right">
+                        <span className={`px-4 py-2 border-4 border-black uppercase text-[10px] ${a.checkedIn ? 'bg-green-400' : 'bg-yellow-300'}`}>
+                          {a.checkedIn ? 'Verified' : 'Pending'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
       </div>
+    </ProtectedRoute>
+  );
+}
+
+function StatBox({ label, value }: any) {
+  return (
+    <div className="border-8 border-black p-10 bg-white shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
+      <h3 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-500 mb-4">{label}</h3>
+      <p className="text-7xl font-black tracking-tighter">{value}</p>
     </div>
   );
 }

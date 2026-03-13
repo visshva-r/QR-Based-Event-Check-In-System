@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import api from '@/lib/api';
+import ProtectedRoute from '@/components/protected_route';
 
 // Matches your backend JSON structure perfectly
 interface Event {
@@ -45,6 +46,7 @@ export default function StudentDashboard() {
   };
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen bg-gray-50 p-6 md:p-12">
       <Toaster position="top-center" />
       
@@ -108,5 +110,6 @@ export default function StudentDashboard() {
         )}
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

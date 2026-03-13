@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// 1. Create the base instance
+// 1. Create the base instance (use env for local dev, fallback to Render)
 const api = axios.create({
-  baseURL: 'https://qr-based-event-check-in-system.onrender.com/api', // <-- Your live Render link!
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://qr-based-event-check-in-system.onrender.com/api',
   headers: {
     'Content-Type': 'application/json',
   },

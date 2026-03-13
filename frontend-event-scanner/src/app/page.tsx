@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast, { Toaster } from 'react-hot-toast';
-import api from '@/lib/api'; 
+import api from '@/lib/api';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -11,95 +11,80 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  /**
-   * Handles the Authentication logic
-   * Communicates with the Render backend via the Axios instance
-   */
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(false); // Reset loading state if needed
     setLoading(true);
 
     try {
-      // 1. Send credentials to the live Render API
+      // 1. Send credentials to your backend
       const response = await api.post('/auth/login', { email, password });
       
-      // 2. Extract JWT and store it for subsequent authenticated requests
-      const { token } = response.data;
+      // 2. Extract token and user from response
+      const { token, user } = response.data;
+
+      // 3. Save token, email, and role to localStorage (role from JWT for secure admin check)
       localStorage.setItem('token', token);
+      localStorage.setItem('userEmail', email);
+      localStorage.setItem('userRole', user?.role || 'student');
       
       toast.success('Login successful!');
 
-      // 3. Role-based routing
-      // Admins are directed to the scanner; students to their event dashboard.
-      if (email.includes('admin')) {
-        router.push('/admin/scanner');
+      // 4. Role-based routing using JWT role
+      if (user?.role === 'admin') {
+        router.push('/admin/dashboard');
       } else {
         router.push('/student/dashboard');
       }
       
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to login';
-      toast.error(errorMessage);
+      toast.error(error.response?.data?.error || 'Failed to login');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-white px-4">
       <Toaster position="top-center" />
       
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 space-y-6 border border-gray-100">
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] p-10 space-y-8 border-[6px] border-black">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-500">Sign in to access the check-in system</p>
+          <h1 className="text-5xl font-black text-black tracking-tighter italic uppercase">Login</h1>
+          <p className="text-black font-bold text-xs uppercase tracking-widest mt-2">QR_CHECK_SYSTEM_V1</p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-5">
-          {/* Email Input Field */}
+        <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">
-              Email Address
-            </label>
+            <label className="block text-xs font-black text-black uppercase tracking-widest mb-2">Email Address</label>
             <input 
               type="email" 
               required
-              autoComplete="off" 
+              autoComplete="off"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-              placeholder="Enter your email"
+              className="w-full px-4 py-3 border-4 border-black rounded-xl text-black font-bold placeholder-gray-400 focus:bg-gray-50 outline-none transition-all"
+              placeholder="name@college.edu"
             />
           </div>
 
-          {/* Password Input Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">
-              Password
-            </label>
+            <label className="block text-xs font-black text-black uppercase tracking-widest mb-2">Password</label>
             <input 
               type="password" 
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              className="w-full px-4 py-3 border-4 border-black rounded-xl text-black font-bold placeholder-gray-400 focus:bg-gray-50 outline-none transition-all"
               placeholder="••••••••"
             />
           </div>
 
-          {/* Submit Button */}
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400 flex justify-center items-center shadow-md active:scale-[0.98]"
+            className="w-full bg-black text-white font-black py-4 rounded-2xl hover:bg-zinc-800 transition-all active:scale-95 uppercase tracking-widest shadow-lg"
           >
-            {loading ? (
-              <>
-                <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-                Signing in...
-              </>
-            ) : 'Sign In'}
+            {loading ? 'Authenticating...' : 'Enter System'}
           </button>
         </form>
       </div>
