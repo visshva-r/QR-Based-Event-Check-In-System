@@ -61,81 +61,72 @@ export default function StudentDashboard() {
 
   return (
     <ProtectedRoute>
-    <div className="min-h-screen bg-gray-50 p-6 md:p-12">
-      <Toaster position="top-center" />
-      
-      <div className="max-w-5xl mx-auto">
-        <header className="mb-10">
-          <h1 className="text-3xl font-bold text-gray-900">Student Dashboard</h1>
-          <p className="text-gray-500 mt-2">Discover and register for upcoming campus events.</p>
-        </header>
+      <div className="min-h-screen bg-neutral-50 p-6 sm:p-8">
+        <Toaster position="top-center" />
+        <div className="max-w-4xl mx-auto">
+          <header className="mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-black">Events</h1>
+            <p className="text-neutral-600 text-sm mt-1">Discover and register for upcoming campus events.</p>
+          </header>
 
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {events.map((event) => {
-              const registered = isRegistered(event);
-              return (
-                <div key={event._id} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-                  <div className="p-6 flex-grow">
-                    <div className="flex justify-between items-start mb-4">
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                        registered 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-blue-100 text-blue-700'
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <div className="size-10 border-2 border-neutral-300 border-t-black rounded-full animate-spin" aria-hidden />
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {events.map((event) => {
+                const registered = isRegistered(event);
+                return (
+                  <article key={event._id} className="bg-white rounded-xl border border-neutral-200 overflow-hidden flex flex-col">
+                    <div className="p-4 sm:p-5 flex-grow">
+                      <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full mb-3 ${
+                        registered ? 'bg-green-100 text-green-800' : 'bg-neutral-100 text-neutral-700'
                       }`}>
                         {registered ? 'Registered' : 'Upcoming'}
                       </span>
-                    </div>
-                    
-                    <h2 className="text-xl font-bold text-gray-800 mb-2">{event.title}</h2>
-                    <p className="text-gray-600 text-sm line-clamp-3 mb-4">
-                      {event.description}
-                    </p>
-                    
-                    <div className="space-y-2 text-sm text-gray-500">
-                      <div className="flex items-center">
-                        <span className="mr-2">📅</span>
-                        {new Date(event.date).toLocaleDateString('en-US', { 
-                          month: 'long', day: 'numeric', year: 'numeric' 
-                        })}
-                      </div>
-                      <div className="flex items-center">
-                        <span className="mr-2">📍</span>
-                        {event.location}
+                      <h2 className="text-lg font-semibold text-black mb-2">{event.title}</h2>
+                      <p className="text-neutral-600 text-sm line-clamp-3 mb-4">
+                        {event.description || 'No description.'}
+                      </p>
+                      <div className="space-y-1.5 text-sm text-neutral-500">
+                        <div className="flex items-center gap-2">
+                          <span aria-hidden>📅</span>
+                          {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span aria-hidden>📍</span>
+                          {event.location}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                    <div className="p-4 border-t border-neutral-100">
+                      <button
+                        type="button"
+                        onClick={() => handleRegister(event._id)}
+                        disabled={registered}
+                        className={`w-full py-2.5 text-sm font-semibold rounded-lg transition-colors ${
+                          registered
+                            ? 'bg-neutral-200 text-neutral-500 cursor-not-allowed'
+                            : 'bg-black text-white hover:bg-neutral-800'
+                        }`}
+                      >
+                        {registered ? 'Already registered' : 'Register'}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
 
-                  <div className="p-4 bg-gray-50 border-t border-gray-100">
-                    <button
-                      onClick={() => handleRegister(event._id)}
-                      disabled={registered}
-                      className={`w-full font-semibold py-2 rounded-xl transition-all active:scale-95 ${
-                        registered 
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
-                      }`}
-                    >
-                      {registered ? 'Already Registered' : 'Register Now'}
-                    </button>
-                  </div>
+              {events.length === 0 && (
+                <div className="col-span-full text-center py-16 bg-white rounded-xl border-2 border-dashed border-neutral-200">
+                  <p className="text-neutral-500">No events right now.</p>
                 </div>
-              );
-            })}
-
-            {events.length === 0 && (
-              <div className="col-span-full text-center py-20 bg-white rounded-2xl border-2 border-dashed border-gray-200">
-                <p className="text-gray-400 text-lg">No events found at the moment.</p>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
     </ProtectedRoute>
   );
 }

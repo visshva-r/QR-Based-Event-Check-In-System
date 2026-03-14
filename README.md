@@ -2,6 +2,8 @@
 
 A full-stack system for campus event registrations and secure QR-based check-ins. Students register for events and receive unique QR code tickets via email. Admins scan QR codes at the venue for instant check-in.
 
+**Status:** Tested; builds and runs without errors. Frontend uses responsive layout and consistent typography (Inter, Tailwind CSS).
+
 ---
 
 ## 🚀 Key Features

@@ -37,14 +37,22 @@ export default function AdminScanner() {
 
     async function onScanSuccess(decodedText: string) {
       if (isProcessing.current) return;
+      const parts = decodedText.trim().split('-');
+      if (parts.length < 2) {
+        toast.error('Invalid QR code format');
+        return;
+      }
+      const [userId, eventId] = parts;
+      if (!userId || !eventId) {
+        toast.error('Invalid QR code');
+        return;
+      }
       isProcessing.current = true;
 
-      // Play Success Sound
       const audio = new Audio('/beep.mp3');
-      audio.play().catch(e => console.warn("Audio play blocked:", e));
+      audio.play().catch(() => {});
 
       try {
-        const [userId, eventId] = decodedText.split('-');
         await api.post(`/events/checkin/${eventId}/${userId}`);
         
         toast.success('CHECK-IN SUCCESSFUL', {
@@ -69,30 +77,28 @@ export default function AdminScanner() {
 
   return (
     <ProtectedRoute requireAdmin={true}>
-      <div className="min-h-screen bg-white p-10 flex flex-col items-center">
-        <div className="max-w-[1400px] w-full mx-auto">
-          
-          <header className="mb-10 text-center">
-            <h1 className="text-6xl font-black italic uppercase tracking-tighter text-black">Scanner_HD</h1>
-            <p className="text-xs font-black tracking-[0.4em] uppercase mt-2">Ready to Scan</p>
+      <Toaster position="top-center" />
+      <div className="min-h-screen bg-white p-6 sm:p-8 flex flex-col items-center">
+        <div className="max-w-lg w-full mx-auto">
+          <header className="mb-8 text-center">
+            <h1 className="text-2xl sm:text-3xl font-bold text-black">QR Scanner</h1>
+            <p className="text-sm text-neutral-600 mt-1">Point at a ticket to check in</p>
           </header>
 
-          {/* 2. THE TARGET DIV */}
-          <div className="relative border-[12px] border-black rounded-[40px] overflow-hidden shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] bg-black aspect-square max-w-lg mx-auto">
-            <div id="reader" className="w-full h-full"></div>
-            
-            {/* Visual HUD overlay */}
+          <div className="relative border-4 border-neutral-800 rounded-2xl overflow-hidden bg-neutral-900 aspect-square w-full">
+            <div id="reader" className="w-full h-full min-h-[280px]" />
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-               <div className={`w-[260px] h-[260px] border-[6px] rounded-3xl transition-all duration-500 ${isReady ? 'border-green-400 opacity-100' : 'border-white opacity-20'}`}></div>
+              <div className={`w-[260px] h-[260px] border-4 rounded-2xl transition-all duration-300 ${isReady ? 'border-green-400 opacity-90' : 'border-white/30 opacity-70'}`} />
             </div>
           </div>
 
-          <div className="mt-12 text-center">
-            <button 
+          <div className="mt-8 text-center">
+            <button
+              type="button"
               onClick={() => window.location.href = '/admin/dashboard'}
-              className="px-12 py-4 bg-black text-white font-black text-xl rounded-2xl hover:bg-zinc-900 active:scale-95 transition-all uppercase tracking-widest shadow-xl"
+              className="px-6 py-3 bg-black text-white font-semibold rounded-xl hover:bg-neutral-800 transition-colors"
             >
-              Exit Scanner
+              Exit scanner
             </button>
           </div>
         </div>

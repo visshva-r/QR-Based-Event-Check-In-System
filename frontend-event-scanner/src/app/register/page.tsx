@@ -38,76 +38,71 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4 py-12">
       <Toaster position="top-center" />
-      
-      <div className="max-w-md w-full bg-white rounded-3xl shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] p-10 space-y-8 border-[6px] border-black">
-        <div className="text-center">
-          <h1 className="text-5xl font-black text-black tracking-tighter italic uppercase">Sign Up</h1>
-          <p className="text-black font-bold text-xs uppercase tracking-widest mt-2">Create Student Account</p>
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-[12px_12px_0_0_rgba(0,0,0,1)] p-8 sm:p-10 border-[4px] border-black">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-black tracking-tight">Sign up</h1>
+          <p className="text-neutral-600 text-sm font-medium mt-2">Create a student account</p>
         </div>
 
         <form onSubmit={handleRegister} className="space-y-5">
           <div>
-            <label className="block text-xs font-black text-black uppercase tracking-widest mb-2">Full Name</label>
-            <input 
-              type="text" 
+            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Full name</label>
+            <input
+              type="text"
               required
               minLength={2}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 border-4 border-black rounded-xl text-black font-bold placeholder-gray-400 focus:bg-gray-50 outline-none transition-all"
+              className="w-full px-4 py-3 text-base border-2 border-neutral-800 rounded-xl text-black placeholder:text-neutral-400 focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all"
               placeholder="John Doe"
             />
           </div>
-
           <div>
-            <label className="block text-xs font-black text-black uppercase tracking-widest mb-2">Email Address</label>
-            <input 
-              type="email" 
+            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Email</label>
+            <input
+              type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border-4 border-black rounded-xl text-black font-bold placeholder-gray-400 focus:bg-gray-50 outline-none transition-all"
+              className="w-full px-4 py-3 text-base border-2 border-neutral-800 rounded-xl text-black placeholder:text-neutral-400 focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all"
               placeholder="name@college.edu"
             />
           </div>
-
           <div>
-            <label className="block text-xs font-black text-black uppercase tracking-widest mb-2">Student ID (optional)</label>
-            <input 
-              type="text" 
+            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Student ID <span className="text-neutral-400 font-normal normal-case">(optional)</span></label>
+            <input
+              type="text"
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
-              className="w-full px-4 py-3 border-4 border-black rounded-xl text-black font-bold placeholder-gray-400 focus:bg-gray-50 outline-none transition-all"
+              className="w-full px-4 py-3 text-base border-2 border-neutral-800 rounded-xl text-black placeholder:text-neutral-400 focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all"
               placeholder="e.g. S12345"
             />
           </div>
-
           <div>
-            <label className="block text-xs font-black text-black uppercase tracking-widest mb-2">Password</label>
-            <input 
-              type="password" 
+            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Password</label>
+            <input
+              type="password"
               required
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border-4 border-black rounded-xl text-black font-bold placeholder-gray-400 focus:bg-gray-50 outline-none transition-all"
+              className="w-full px-4 py-3 text-base border-2 border-neutral-800 rounded-xl text-black placeholder:text-neutral-400 focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all"
               placeholder="••••••••"
             />
           </div>
-
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
-            className="w-full bg-black text-white font-black py-4 rounded-2xl hover:bg-zinc-800 transition-all active:scale-95 uppercase tracking-widest shadow-lg"
+            className="w-full bg-black text-white font-semibold py-3.5 rounded-xl hover:bg-neutral-800 transition-colors active:scale-[0.99] disabled:opacity-70 text-base"
           >
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {loading ? 'Creating account…' : 'Create account'}
           </button>
         </form>
 
-        <p className="text-center text-sm font-bold text-black">
+        <p className="text-center text-sm text-neutral-600 mt-6">
           Already have an account?{' '}
-          <Link href="/" className="underline decoration-4 hover:decoration-black">
-            Login
+          <Link href="/" className="font-semibold text-black underline underline-offset-2 hover:no-underline">
+            Log in
           </Link>
         </p>
       </div>

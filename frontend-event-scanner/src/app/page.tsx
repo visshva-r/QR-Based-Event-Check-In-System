@@ -46,54 +46,51 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4">
+    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-12">
       <Toaster position="top-center" />
-      
-      <div className="max-w-md w-full bg-white rounded-3xl shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] p-10 space-y-8 border-[6px] border-black">
-        <div className="text-center">
-          <h1 className="text-5xl font-black text-black tracking-tighter italic uppercase">Login</h1>
-          <p className="text-black font-bold text-xs uppercase tracking-widest mt-2">QR_CHECK_SYSTEM_V1</p>
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-[12px_12px_0_0_rgba(0,0,0,1)] p-8 sm:p-10 border-[4px] border-black">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-black tracking-tight">Login</h1>
+          <p className="text-neutral-600 text-sm font-medium mt-2">QR Event Check-In System</p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label className="block text-xs font-black text-black uppercase tracking-widest mb-2">Email Address</label>
-            <input 
-              type="email" 
+            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Email</label>
+            <input
+              type="email"
               required
               autoComplete="off"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border-4 border-black rounded-xl text-black font-bold placeholder-gray-400 focus:bg-gray-50 outline-none transition-all"
+              className="w-full px-4 py-3 text-base border-2 border-neutral-800 rounded-xl text-black placeholder:text-neutral-400 focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all"
               placeholder="name@college.edu"
             />
           </div>
-
           <div>
-            <label className="block text-xs font-black text-black uppercase tracking-widest mb-2">Password</label>
-            <input 
-              type="password" 
+            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Password</label>
+            <input
+              type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border-4 border-black rounded-xl text-black font-bold placeholder-gray-400 focus:bg-gray-50 outline-none transition-all"
+              className="w-full px-4 py-3 text-base border-2 border-neutral-800 rounded-xl text-black placeholder:text-neutral-400 focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all"
               placeholder="••••••••"
             />
           </div>
-
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
-            className="w-full bg-black text-white font-black py-4 rounded-2xl hover:bg-zinc-800 transition-all active:scale-95 uppercase tracking-widest shadow-lg"
+            className="w-full bg-black text-white font-semibold py-3.5 rounded-xl hover:bg-neutral-800 transition-colors active:scale-[0.99] disabled:opacity-70 text-base"
           >
-            {loading ? 'Authenticating...' : 'Enter System'}
+            {loading ? 'Signing in…' : 'Enter'}
           </button>
         </form>
 
-        <p className="text-center text-sm font-bold text-black mt-4">
+        <p className="text-center text-sm text-neutral-600 mt-6">
           Don&apos;t have an account?{' '}
-          <Link href="/register" className="underline decoration-4 hover:decoration-black">
-            Sign Up
+          <Link href="/register" className="font-semibold text-black underline underline-offset-2 hover:no-underline">
+            Sign up
           </Link>
         </p>
       </div>

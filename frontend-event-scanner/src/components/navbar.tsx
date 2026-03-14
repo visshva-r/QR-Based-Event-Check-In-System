@@ -17,16 +17,13 @@ export default function Navbar() {
   if (pathname === '/' || pathname === '/register') return null;
 
   return (
-    <nav className="bg-white border-b-8 border-black py-5 px-10 sticky top-0 z-50">
-      <div className="max-w-[1400px] mx-auto flex justify-between items-center">
-        
-        {/* Brand & Links Group */}
-        <div className="flex items-center gap-12"> 
-          <Link href="/" className="text-4xl font-black italic tracking-tighter">
-            QR_CHECK
+    <nav className="bg-white border-b-4 border-black py-4 px-6 sm:px-8 sticky top-0 z-50">
+      <div className="max-w-6xl mx-auto flex justify-between items-center gap-4">
+        <div className="flex items-center gap-8 sm:gap-10">
+          <Link href="/" className="text-xl sm:text-2xl font-bold text-black tracking-tight">
+            QR Check
           </Link>
-          
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4 sm:gap-6">
             {isAdmin ? (
               <>
                 <NavLink href="/admin/dashboard" active={pathname === '/admin/dashboard'}>Dashboard</NavLink>
@@ -37,24 +34,24 @@ export default function Navbar() {
             )}
           </div>
         </div>
-
-        <button 
+        <button
+          type="button"
           onClick={() => { localStorage.clear(); router.push('/'); }}
-          className="bg-black text-white px-8 py-3 font-black uppercase text-sm hover:bg-red-600 transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,0.2)]"
+          className="bg-black text-white px-5 py-2.5 text-sm font-semibold rounded-lg hover:bg-neutral-800 transition-colors shrink-0"
         >
-          Logout
+          Log out
         </button>
       </div>
     </nav>
   );
 }
 
-function NavLink({ href, children, active }: any) {
+function NavLink({ href, children, active }: { href: string; children: React.ReactNode; active: boolean }) {
   return (
-    <Link 
-      href={href} 
-      className={`text-sm font-black uppercase tracking-[0.2em] transition-all px-2 ${
-        active ? 'bg-black text-white px-4 py-1' : 'text-black hover:underline decoration-4 underline-offset-8'
+    <Link
+      href={href}
+      className={`text-sm font-semibold transition-colors px-3 py-1.5 rounded-md ${
+        active ? 'bg-black text-white' : 'text-neutral-700 hover:bg-neutral-100 hover:text-black'
       }`}
     >
       {children}

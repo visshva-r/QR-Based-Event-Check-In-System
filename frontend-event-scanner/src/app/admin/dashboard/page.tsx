@@ -109,53 +109,51 @@ export default function AdminDashboard() {
   return (
     <ProtectedRoute requireAdmin={true}>
       <Toaster position="top-center" />
-      <div className="min-h-screen bg-white p-10">
-        <div className="max-w-[1400px] mx-auto">
-          
-          <header className="mb-16 flex flex-wrap items-center justify-between gap-6">
-            <div>
-              <h1 className="text-8xl font-black italic uppercase tracking-tighter text-black">Overview</h1>
-              <div className="w-48 h-4 bg-black mt-2"></div>
-            </div>
+      <div className="min-h-screen bg-white p-6 sm:p-8 md:p-10">
+        <div className="max-w-5xl mx-auto">
+          <header className="mb-10 flex flex-wrap items-center justify-between gap-4">
+            <h1 className="text-2xl sm:text-3xl font-bold text-black">Overview</h1>
             <button
+              type="button"
               onClick={() => setShowCreateModal(true)}
-              className="bg-black text-white px-8 py-4 font-black uppercase text-sm hover:bg-zinc-800 transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,0.3)]"
+              className="bg-black text-white px-5 py-2.5 text-sm font-semibold rounded-xl hover:bg-neutral-800 transition-colors"
             >
-              + Create Event
+              + Create event
             </button>
           </header>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-20">
-            <StatBox label="Total Registered" value={stats.total} />
-            <StatBox label="Checked In" value={stats.checkedIn} />
-            <StatBox label="Attendance %" value={`${stats.total > 0 ? Math.round((stats.checkedIn / stats.total) * 100) : 0}%`} />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-10">
+            <StatBox label="Total registered" value={stats.total} />
+            <StatBox label="Checked in" value={stats.checkedIn} />
+            <StatBox label="Attendance" value={`${stats.total > 0 ? Math.round((stats.checkedIn / stats.total) * 100) : 0}%`} />
           </div>
 
-          {/* Events list with export */}
           {events.length > 0 && (
-            <section className="mb-16">
-              <h2 className="text-3xl font-black uppercase mb-6 underline decoration-8">Events</h2>
-              <div className="space-y-4">
+            <section className="mb-10">
+              <h2 className="text-lg font-semibold text-black mb-4">Events</h2>
+              <div className="space-y-3">
                 {events.map((event) => (
-                  <div key={event._id} className="border-[4px] border-black p-6 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+                  <div key={event._id} className="border-2 border-neutral-200 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 bg-neutral-50/50">
                     <div>
-                      <h3 className="text-xl font-black">{event.title}</h3>
-                      <p className="text-sm text-zinc-600">{event.attendees.length} attendees</p>
+                      <h3 className="font-semibold text-black">{event.title}</h3>
+                      <p className="text-sm text-neutral-500">{event.attendees.length} attendees</p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex gap-2">
                       <button
+                        type="button"
                         onClick={() => handleExport(event._id, 'csv')}
                         disabled={exporting === event._id || event.attendees.length === 0}
-                        className="px-4 py-2 border-2 border-black font-bold text-sm uppercase hover:bg-black hover:text-white transition-all disabled:opacity-50"
+                        className="px-3 py-1.5 text-sm font-medium border-2 border-neutral-800 rounded-lg hover:bg-neutral-800 hover:text-white transition-colors disabled:opacity-50"
                       >
-                        Export CSV
+                        CSV
                       </button>
                       <button
+                        type="button"
                         onClick={() => handleExport(event._id, 'json')}
                         disabled={exporting === event._id || event.attendees.length === 0}
-                        className="px-4 py-2 border-2 border-black font-bold text-sm uppercase hover:bg-black hover:text-white transition-all disabled:opacity-50"
+                        className="px-3 py-1.5 text-sm font-medium border-2 border-neutral-800 rounded-lg hover:bg-neutral-800 hover:text-white transition-colors disabled:opacity-50"
                       >
-                        Export JSON
+                        JSON
                       </button>
                     </div>
                   </div>
@@ -165,30 +163,30 @@ export default function AdminDashboard() {
           )}
 
           <section>
-            <h2 className="text-3xl font-black uppercase mb-8 underline decoration-8">Live Entry Logs</h2>
-            <div className="border-[6px] border-black rounded-3xl overflow-hidden shadow-[15px_15px_0px_0px_rgba(0,0,0,1)]">
+            <h2 className="text-lg font-semibold text-black mb-4">Live entry logs</h2>
+            <div className="border-2 border-neutral-200 rounded-xl overflow-hidden">
               <table className="w-full text-left">
-                <thead className="bg-black text-white uppercase text-xs tracking-widest">
+                <thead className="bg-neutral-900 text-white">
                   <tr>
-                    <th className="p-6">Attendee</th>
-                    <th className="p-6">Event</th>
-                    <th className="p-6 text-right">Verification Status</th>
+                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">Attendee</th>
+                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">Event</th>
+                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-right">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y-4 divide-black">
+                <tbody className="divide-y divide-neutral-200">
                   {allAttendees.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="p-12 text-center text-zinc-500 font-bold">
+                      <td colSpan={3} className="px-4 py-10 text-center text-sm text-neutral-500">
                         No registrations yet. Students will appear here when they register.
                       </td>
                     </tr>
                   ) : (
                     allAttendees.map((a, idx) => (
-                      <tr key={`${a._id}-${idx}`} className="hover:bg-zinc-50 font-bold">
-                        <td className="p-6 text-sm">{getAttendeeDisplay(a)}</td>
-                        <td className="p-6 text-sm text-zinc-600">{a.eventTitle}</td>
-                        <td className="p-6 text-right">
-                          <span className={`px-4 py-2 border-4 border-black uppercase text-[10px] ${a.checkedIn ? 'bg-green-400' : 'bg-yellow-300'}`}>
+                      <tr key={`${a._id}-${idx}`} className="hover:bg-neutral-50">
+                        <td className="px-4 py-3 text-sm text-neutral-800">{getAttendeeDisplay(a)}</td>
+                        <td className="px-4 py-3 text-sm text-neutral-600">{a.eventTitle}</td>
+                        <td className="px-4 py-3 text-right">
+                          <span className={`inline-block px-2.5 py-1 text-xs font-medium rounded-md ${a.checkedIn ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
                             {a.checkedIn ? 'Verified' : 'Pending'}
                           </span>
                         </td>
@@ -202,77 +200,76 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Create Event Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white border-[6px] border-black rounded-3xl shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] max-w-md w-full p-10">
-            <h2 className="text-2xl font-black uppercase mb-6">Create Event</h2>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="create-event-title">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 sm:p-8 border border-neutral-200">
+            <h2 id="create-event-title" className="text-xl font-bold text-black mb-6">Create event</h2>
             <form onSubmit={handleCreateEvent} className="space-y-4">
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest mb-2">Title *</label>
+                <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Title *</label>
                 <input
                   required
                   value={createForm.title}
                   onChange={(e) => setCreateForm(f => ({ ...f, title: e.target.value }))}
-                  className="w-full px-4 py-3 border-4 border-black rounded-xl font-bold"
+                  className="w-full px-4 py-3 text-base border-2 border-neutral-300 rounded-xl focus:border-black focus:ring-2 focus:ring-black/10 outline-none"
                   placeholder="Tech Workshop 2025"
                 />
               </div>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest mb-2">Description</label>
+                <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Description</label>
                 <textarea
                   value={createForm.description}
                   onChange={(e) => setCreateForm(f => ({ ...f, description: e.target.value }))}
-                  className="w-full px-4 py-3 border-4 border-black rounded-xl font-bold"
-                  placeholder="Optional description"
+                  className="w-full px-4 py-3 text-base border-2 border-neutral-300 rounded-xl focus:border-black focus:ring-2 focus:ring-black/10 outline-none resize-y"
+                  placeholder="Optional"
                   rows={3}
                 />
               </div>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest mb-2">Location *</label>
+                <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Location *</label>
                 <input
                   required
                   value={createForm.location}
                   onChange={(e) => setCreateForm(f => ({ ...f, location: e.target.value }))}
-                  className="w-full px-4 py-3 border-4 border-black rounded-xl font-bold"
+                  className="w-full px-4 py-3 text-base border-2 border-neutral-300 rounded-xl focus:border-black focus:ring-2 focus:ring-black/10 outline-none"
                   placeholder="Main Hall"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-widest mb-2">Date *</label>
+                  <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Date *</label>
                   <input
                     required
                     type="date"
                     value={createForm.date}
                     onChange={(e) => setCreateForm(f => ({ ...f, date: e.target.value }))}
-                    className="w-full px-4 py-3 border-4 border-black rounded-xl font-bold"
+                    className="w-full px-4 py-3 text-base border-2 border-neutral-300 rounded-xl focus:border-black focus:ring-2 focus:ring-black/10 outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-widest mb-2">Time</label>
+                  <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Time</label>
                   <input
                     type="time"
                     value={createForm.time}
                     onChange={(e) => setCreateForm(f => ({ ...f, time: e.target.value }))}
-                    className="w-full px-4 py-3 border-4 border-black rounded-xl font-bold"
+                    className="w-full px-4 py-3 text-base border-2 border-neutral-300 rounded-xl focus:border-black focus:ring-2 focus:ring-black/10 outline-none"
                   />
                 </div>
               </div>
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 py-3 border-4 border-black font-black uppercase hover:bg-zinc-100 rounded-xl"
+                  className="flex-1 py-3 text-base font-medium border-2 border-neutral-300 rounded-xl hover:bg-neutral-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={creating}
-                  className="flex-1 py-3 bg-black text-white font-black uppercase rounded-xl hover:bg-zinc-800 disabled:opacity-50"
+                  className="flex-1 py-3 bg-black text-white text-base font-semibold rounded-xl hover:bg-neutral-800 disabled:opacity-60 transition-colors"
                 >
-                  {creating ? 'Creating...' : 'Create'}
+                  {creating ? 'Creating…' : 'Create'}
                 </button>
               </div>
             </form>
@@ -285,9 +282,9 @@ export default function AdminDashboard() {
 
 function StatBox({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="border-8 border-black p-10 bg-white shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
-      <h3 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-500 mb-4">{label}</h3>
-      <p className="text-7xl font-black tracking-tighter">{value}</p>
+    <div className="border-2 border-neutral-200 rounded-xl p-5 sm:p-6 bg-white">
+      <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">{label}</p>
+      <p className="text-2xl sm:text-3xl font-bold text-black tabular-nums">{value}</p>
     </div>
   );
 }

@@ -35,9 +35,9 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Prote
   // Show a black high-contrast loader while checking
   if (!authorized) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center">
-        <div className="w-12 h-12 border-[6px] border-black border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 font-black uppercase tracking-widest text-xs">Verifying Access...</p>
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4">
+        <div className="size-10 border-2 border-neutral-300 border-t-black rounded-full animate-spin" aria-hidden />
+        <p className="text-sm font-medium text-neutral-600">Verifying access…</p>
       </div>
     );
   }
