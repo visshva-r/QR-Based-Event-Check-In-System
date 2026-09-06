@@ -1,27 +1,40 @@
 import axios from 'axios';
+import { clearAuth } from './auth';
 
-// 1. Create the base instance (use env for local dev, fallback to Render)
+const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://qr-based-event-check-in-system.onrender.com/api';
+
+export const socketUrl = apiBase.replace(/\/api\/?$/, '');
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://qr-based-event-check-in-system.onrender.com/api',
+  baseURL: apiBase,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// 2. The Interceptor: Automatically attach the JWT token if it exists
 api.interceptors.request.use(
   (config) => {
-    // Check if we are in the browser (Next.js SSR safety check)
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
-      
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
     return config;
   },
+  (error) => Promise.reject(error)
+);
+
+api.interceptors.response.use(
+  (res) => res,
   (error) => {
+    if (typeof window !== 'undefined' && error.response?.status === 401) {
+      const path = window.location.pathname;
+      if (path !== '/' && path !== '/register') {
+        clearAuth();
+        window.location.href = '/';
+      }
+    }
     return Promise.reject(error);
   }
 );

@@ -1,13 +1,22 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import Navbar from "@/components/navbar"; // Import the component we created
+import type { Metadata } from 'next';
+import { IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google';
+import './globals.css';
+import Navbar from '@/components/navbar';
 
-const inter = Inter({ subsets: ["latin"] });
+const sans = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+});
+
+const mono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-mono',
+});
 
 export const metadata: Metadata = {
-  title: "QR Event System",
-  description: "Advanced Event Check-In System",
+  title: 'Gate | campus check-in',
+  description: 'Signed passes and door scanning for campus events.',
 };
 
 export default function RootLayout({
@@ -17,14 +26,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} antialiased bg-white`}>
-        {/* 1. Global Navbar appears on every page */}
+      <body className={`${sans.className} ${mono.variable} antialiased`}>
         <Navbar />
-
-        {/* 2. Main content container */}
-        <main className="min-h-screen">
-          {children}
-        </main>
+        <main className="min-h-screen">{children}</main>
       </body>
     </html>
   );

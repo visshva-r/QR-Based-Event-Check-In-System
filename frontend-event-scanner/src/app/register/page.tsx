@@ -17,93 +17,55 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       await api.post('/auth/register', {
         name,
         email,
         studentId: studentId || undefined,
         password,
-        role: 'student',
       });
-      toast.success('Account created! Please login.');
+      toast.success('Account ready. Sign in to grab your passes.');
       router.push('/');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Registration failed');
+      toast.error(error.response?.data?.error || 'Could not create account');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-12">
-      <Toaster position="top-center" />
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-[12px_12px_0_0_rgba(0,0,0,1)] p-8 sm:p-10 border-[4px] border-black">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-black tracking-tight">Sign up</h1>
-          <p className="text-neutral-600 text-sm font-medium mt-2">Create a student account</p>
-        </div>
+  const field = 'w-full px-3 py-2.5 bg-white border border-stone-400 text-stone-900 outline-none focus:border-stone-900';
 
-        <form onSubmit={handleRegister} className="space-y-5">
+  return (
+    <div className="min-h-screen bg-[#f3efe6] flex items-center justify-center px-6 py-16">
+      <Toaster position="top-center" />
+      <div className="w-full max-w-sm">
+        <p className="font-mono text-sm tracking-[0.22em] mb-10">GATE</p>
+        <h1 className="text-2xl font-semibold text-stone-900">Student account</h1>
+        <p className="text-sm text-stone-500 mt-1 mb-8">Door staff accounts are issued by the college, not this form.</p>
+        <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Full name</label>
-            <input
-              type="text"
-              required
-              minLength={2}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 text-base border-2 border-neutral-800 rounded-xl text-black placeholder:text-neutral-400 focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all"
-              placeholder="John Doe"
-            />
+            <label className="block text-sm text-stone-600 mb-1">Full name</label>
+            <input type="text" required minLength={2} value={name} onChange={(e) => setName(e.target.value)} className={field} />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Email</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 text-base border-2 border-neutral-800 rounded-xl text-black placeholder:text-neutral-400 focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all"
-              placeholder="name@college.edu"
-            />
+            <label className="block text-sm text-stone-600 mb-1">College email</label>
+            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={field} placeholder="name@college.edu" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Student ID <span className="text-neutral-400 font-normal normal-case">(optional)</span></label>
-            <input
-              type="text"
-              value={studentId}
-              onChange={(e) => setStudentId(e.target.value)}
-              className="w-full px-4 py-3 text-base border-2 border-neutral-800 rounded-xl text-black placeholder:text-neutral-400 focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all"
-              placeholder="e.g. S12345"
-            />
+            <label className="block text-sm text-stone-600 mb-1">Student ID <span className="text-stone-400">(optional)</span></label>
+            <input type="text" value={studentId} onChange={(e) => setStudentId(e.target.value)} className={field} />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Password</label>
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 text-base border-2 border-neutral-800 rounded-xl text-black placeholder:text-neutral-400 focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all"
-              placeholder="••••••••"
-            />
+            <label className="block text-sm text-stone-600 mb-1">Password</label>
+            <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className={field} />
           </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-black text-white font-semibold py-3.5 rounded-xl hover:bg-neutral-800 transition-colors active:scale-[0.99] disabled:opacity-70 text-base"
-          >
-            {loading ? 'Creating account…' : 'Create account'}
+          <button type="submit" disabled={loading} className="w-full bg-stone-900 text-white py-2.5 text-sm font-medium hover:bg-stone-800 disabled:opacity-60">
+            {loading ? 'Creating…' : 'Create account'}
           </button>
         </form>
-
-        <p className="text-center text-sm text-neutral-600 mt-6">
+        <p className="text-sm text-stone-600 mt-6">
           Already have an account?{' '}
-          <Link href="/" className="font-semibold text-black underline underline-offset-2 hover:no-underline">
-            Log in
-          </Link>
+          <Link href="/" className="text-stone-900 underline underline-offset-2">Sign in</Link>
         </p>
       </div>
     </div>

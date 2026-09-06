@@ -1,194 +1,195 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import ProtectedRoute from '@/components/protected_route';
 import toast, { Toaster } from 'react-hot-toast';
+import { getSocket } from '@/lib/socket';
+import { formatEventWhen } from '@/lib/format';
 
-interface Attendee {
-  _id: string;
-  userId: string | { _id: string; name: string; email: string; studentId?: string };
-  checkedIn: boolean;
-}
-
-interface EventWithAttendees {
+interface AdminEvent {
   _id: string;
   title: string;
-  description?: string;
   location?: string;
   date?: string;
   time?: string;
-  attendees: Attendee[];
+  capacity: number;
+  registeredCount: number;
+  checkedInCount: number;
+  waitlistCount: number;
+  seatsRemaining: number;
+  checkInPercent: number;
+}
+
+interface CheckInLog {
+  _id: string;
+  attendeeName: string;
+  attendeeEmail: string;
+  eventTitle: string;
+  createdAt: string;
 }
 
 export default function AdminDashboard() {
-  const [events, setEvents] = useState<EventWithAttendees[]>([]);
-  const [stats, setStats] = useState({ total: 0, checkedIn: 0 });
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState({ title: '', description: '', location: '', date: '', time: '' });
+  const router = useRouter();
+  const [events, setEvents] = useState<AdminEvent[]>([]);
+  const [logs, setLogs] = useState<CheckInLog[]>([]);
+  const [showCreate, setShowCreate] = useState(false);
+  const [createForm, setCreateForm] = useState({ title: '', description: '', location: '', date: '', time: '', capacity: '100' });
   const [creating, setCreating] = useState(false);
-  const [exporting, setExporting] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const res = await api.get('/admin/events');
-      setEvents(res.data);
-      let total = 0, checked = 0;
-      res.data.forEach((e: EventWithAttendees) => {
-        total += e.attendees.length;
-        checked += e.attendees.filter((a: Attendee) => a.checkedIn).length;
-      });
-      setStats({ total, checkedIn: checked });
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to load dashboard');
+      const [eventsRes, logsRes] = await Promise.all([
+        api.get('/admin/events'),
+        api.get('/admin/logs?limit=40'),
+      ]);
+      setEvents(eventsRes.data);
+      setLogs(logsRes.data);
+    } catch {
+      toast.error('Could not load the desk');
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
-    const inv = setInterval(fetchData, 5000);
-    return () => clearInterval(inv);
-  }, []);
+    const socket = getSocket();
+    if (!socket) return;
+    const onCheckin = (log: CheckInLog) => {
+      setLogs((prev) => [log, ...prev.filter((l) => l._id !== log._id)].slice(0, 40));
+    };
+    const onUpdated = () => { fetchData(); };
+    socket.on('checkin', onCheckin);
+    socket.on('event-updated', onUpdated);
+    return () => {
+      socket.off('checkin', onCheckin);
+      socket.off('event-updated', onUpdated);
+    };
+  }, [fetchData]);
 
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
     try {
-      await api.post('/admin/create', createForm);
-      toast.success('Event created!');
-      setShowCreateModal(false);
-      setCreateForm({ title: '', description: '', location: '', date: '', time: '' });
+      await api.post('/admin/create', { ...createForm, capacity: Number(createForm.capacity) });
+      toast.success('Event is live');
+      setShowCreate(false);
+      setCreateForm({ title: '', description: '', location: '', date: '', time: '', capacity: '100' });
       fetchData();
     } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Failed to create event');
+      toast.error(err.response?.data?.error || 'Could not create event');
     } finally {
       setCreating(false);
     }
   };
 
-  const handleExport = async (eventId: string, format: 'csv' | 'json') => {
-    setExporting(eventId);
-    try {
-      if (format === 'csv') {
-        const res = await api.get(`/admin/export/${eventId}`, { responseType: 'blob' });
-        const url = URL.createObjectURL(new Blob([res.data]));
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `event-attendees.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-      } else {
-        const res = await api.get(`/events/export/${eventId}`);
-        const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `event-attendees.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-      }
-      toast.success(`Exported as ${format.toUpperCase()}`);
-    } catch (err) {
-      toast.error('Export failed');
-    } finally {
-      setExporting(null);
-    }
-  };
+  const totals = events.reduce(
+    (acc, e) => {
+      acc.registered += e.registeredCount;
+      acc.checkedIn += e.checkedInCount;
+      acc.waitlisted += e.waitlistCount;
+      return acc;
+    },
+    { registered: 0, checkedIn: 0, waitlisted: 0 }
+  );
 
-  const getAttendeeDisplay = (a: Attendee) => {
-    const u = a.userId;
-    if (typeof u === 'object' && u !== null && 'name' in u) {
-      return `${u.name} (${u.email})`;
-    }
-    return String(u);
-  };
-
-  const allAttendees = events.flatMap(e => e.attendees.map(a => ({ ...a, eventTitle: e.title })));
+  const field = 'w-full px-3 py-2 bg-white border border-neutral-300 outline-none focus:border-neutral-900';
 
   return (
     <ProtectedRoute requireAdmin={true}>
       <Toaster position="top-center" />
-      <div className="min-h-screen bg-white p-6 sm:p-8 md:p-10">
+      <div className="min-h-screen bg-neutral-100 text-neutral-900 px-5 sm:px-8 py-10">
         <div className="max-w-5xl mx-auto">
-          <header className="mb-10 flex flex-wrap items-center justify-between gap-4">
-            <h1 className="text-2xl sm:text-3xl font-bold text-black">Overview</h1>
+          <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="font-mono text-[11px] tracking-[0.18em] text-neutral-500">STAFF DESK</p>
+              <h1 className="text-3xl font-semibold tracking-tight mt-1">Tonight’s door</h1>
+            </div>
             <button
               type="button"
-              onClick={() => setShowCreateModal(true)}
-              className="bg-black text-white px-5 py-2.5 text-sm font-semibold rounded-xl hover:bg-neutral-800 transition-colors"
+              onClick={() => setShowCreate(true)}
+              className="px-4 py-2 text-sm bg-neutral-950 text-white hover:bg-neutral-800"
             >
-              + Create event
+              New event
             </button>
           </header>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-10">
-            <StatBox label="Total registered" value={stats.total} />
-            <StatBox label="Checked in" value={stats.checkedIn} />
-            <StatBox label="Attendance" value={`${stats.total > 0 ? Math.round((stats.checkedIn / stats.total) * 100) : 0}%`} />
+          <div className="grid grid-cols-3 gap-px bg-neutral-300 border border-neutral-300 mb-10">
+            <Stat label="Registered" value={totals.registered} />
+            <Stat label="Through the door" value={totals.checkedIn} />
+            <Stat label="Waitlist" value={totals.waitlisted} />
           </div>
 
-          {events.length > 0 && (
-            <section className="mb-10">
-              <h2 className="text-lg font-semibold text-black mb-4">Events</h2>
-              <div className="space-y-3">
-                {events.map((event) => (
-                  <div key={event._id} className="border-2 border-neutral-200 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 bg-neutral-50/50">
-                    <div>
-                      <h3 className="font-semibold text-black">{event.title}</h3>
-                      <p className="text-sm text-neutral-500">{event.attendees.length} attendees</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleExport(event._id, 'csv')}
-                        disabled={exporting === event._id || event.attendees.length === 0}
-                        className="px-3 py-1.5 text-sm font-medium border-2 border-neutral-800 rounded-lg hover:bg-neutral-800 hover:text-white transition-colors disabled:opacity-50"
+          <section className="mb-12">
+            <h2 className="text-sm font-medium text-neutral-500 mb-3">Events</h2>
+            {events.length === 0 ? (
+              <p className="text-sm text-neutral-500 border border-dashed border-neutral-400 px-4 py-8">
+                No events on the board. Add one before doors open.
+              </p>
+            ) : (
+              <div className="border border-neutral-300 bg-white overflow-hidden">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-neutral-950 text-white font-mono text-[11px] tracking-wider">
+                    <tr>
+                      <th className="px-4 py-2 font-medium">Event</th>
+                      <th className="px-4 py-2 font-medium">Seats</th>
+                      <th className="px-4 py-2 font-medium text-right">In</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-200">
+                    {events.map((event) => (
+                      <tr
+                        key={event._id}
+                        className="hover:bg-neutral-50 cursor-pointer"
+                        onClick={() => router.push(`/admin/events/${event._id}`)}
                       >
-                        CSV
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleExport(event._id, 'json')}
-                        disabled={exporting === event._id || event.attendees.length === 0}
-                        className="px-3 py-1.5 text-sm font-medium border-2 border-neutral-800 rounded-lg hover:bg-neutral-800 hover:text-white transition-colors disabled:opacity-50"
-                      >
-                        JSON
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                        <td className="px-4 py-3">
+                          <p className="font-medium">{event.title}</p>
+                          <p className="text-neutral-500 text-xs mt-0.5">
+                            {event.location} · {formatEventWhen(event.date, event.time)}
+                          </p>
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs text-neutral-600">
+                          {event.registeredCount}/{event.capacity}
+                          {event.waitlistCount ? ` · +${event.waitlistCount} wait` : ''}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono text-xs">{event.checkInPercent}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </section>
-          )}
+            )}
+          </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-black mb-4">Live entry logs</h2>
-            <div className="border-2 border-neutral-200 rounded-xl overflow-hidden">
-              <table className="w-full text-left">
-                <thead className="bg-neutral-900 text-white">
+            <h2 className="text-sm font-medium text-neutral-500 mb-3">Live log</h2>
+            <div className="border border-neutral-300 bg-white overflow-hidden">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-neutral-950 text-white font-mono text-[11px] tracking-wider">
                   <tr>
-                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">Attendee</th>
-                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">Event</th>
-                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-right">Status</th>
+                    <th className="px-4 py-2 font-medium">Name</th>
+                    <th className="px-4 py-2 font-medium">Event</th>
+                    <th className="px-4 py-2 font-medium text-right">Time</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-200">
-                  {allAttendees.length === 0 ? (
+                  {logs.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="px-4 py-10 text-center text-sm text-neutral-500">
-                        No registrations yet. Students will appear here when they register.
+                      <td colSpan={3} className="px-4 py-10 text-center text-neutral-500">
+                        Nothing yet. Door scans show up here as they happen.
                       </td>
                     </tr>
                   ) : (
-                    allAttendees.map((a, idx) => (
-                      <tr key={`${a._id}-${idx}`} className="hover:bg-neutral-50">
-                        <td className="px-4 py-3 text-sm text-neutral-800">{getAttendeeDisplay(a)}</td>
-                        <td className="px-4 py-3 text-sm text-neutral-600">{a.eventTitle}</td>
-                        <td className="px-4 py-3 text-right">
-                          <span className={`inline-block px-2.5 py-1 text-xs font-medium rounded-md ${a.checkedIn ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
-                            {a.checkedIn ? 'Verified' : 'Pending'}
-                          </span>
+                    logs.map((log) => (
+                      <tr key={log._id}>
+                        <td className="px-4 py-2.5">
+                          {log.attendeeName}
+                          <span className="block text-xs text-neutral-500">{log.attendeeEmail}</span>
+                        </td>
+                        <td className="px-4 py-2.5 text-neutral-600">{log.eventTitle}</td>
+                        <td className="px-4 py-2.5 text-right font-mono text-xs text-neutral-500">
+                          {new Date(log.createdAt).toLocaleTimeString()}
                         </td>
                       </tr>
                     ))
@@ -200,76 +201,23 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="create-event-title">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 sm:p-8 border border-neutral-200">
-            <h2 id="create-event-title" className="text-xl font-bold text-black mb-6">Create event</h2>
-            <form onSubmit={handleCreateEvent} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Title *</label>
-                <input
-                  required
-                  value={createForm.title}
-                  onChange={(e) => setCreateForm(f => ({ ...f, title: e.target.value }))}
-                  className="w-full px-4 py-3 text-base border-2 border-neutral-300 rounded-xl focus:border-black focus:ring-2 focus:ring-black/10 outline-none"
-                  placeholder="Tech Workshop 2025"
-                />
+      {showCreate && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+          <div className="bg-white max-w-md w-full p-6 border border-neutral-300">
+            <h2 className="text-lg font-semibold mb-5">New event</h2>
+            <form onSubmit={handleCreateEvent} className="space-y-3">
+              <input required value={createForm.title} onChange={(e) => setCreateForm((f) => ({ ...f, title: e.target.value }))} className={field} placeholder="Title" />
+              <textarea value={createForm.description} onChange={(e) => setCreateForm((f) => ({ ...f, description: e.target.value }))} className={field} placeholder="What it is (optional)" rows={2} />
+              <input required value={createForm.location} onChange={(e) => setCreateForm((f) => ({ ...f, location: e.target.value }))} className={field} placeholder="Hall / lawn / lab" />
+              <div className="grid grid-cols-2 gap-3">
+                <input required type="date" value={createForm.date} onChange={(e) => setCreateForm((f) => ({ ...f, date: e.target.value }))} className={field} />
+                <input type="time" value={createForm.time} onChange={(e) => setCreateForm((f) => ({ ...f, time: e.target.value }))} className={field} />
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Description</label>
-                <textarea
-                  value={createForm.description}
-                  onChange={(e) => setCreateForm(f => ({ ...f, description: e.target.value }))}
-                  className="w-full px-4 py-3 text-base border-2 border-neutral-300 rounded-xl focus:border-black focus:ring-2 focus:ring-black/10 outline-none resize-y"
-                  placeholder="Optional"
-                  rows={3}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Location *</label>
-                <input
-                  required
-                  value={createForm.location}
-                  onChange={(e) => setCreateForm(f => ({ ...f, location: e.target.value }))}
-                  className="w-full px-4 py-3 text-base border-2 border-neutral-300 rounded-xl focus:border-black focus:ring-2 focus:ring-black/10 outline-none"
-                  placeholder="Main Hall"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Date *</label>
-                  <input
-                    required
-                    type="date"
-                    value={createForm.date}
-                    onChange={(e) => setCreateForm(f => ({ ...f, date: e.target.value }))}
-                    className="w-full px-4 py-3 text-base border-2 border-neutral-300 rounded-xl focus:border-black focus:ring-2 focus:ring-black/10 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Time</label>
-                  <input
-                    type="time"
-                    value={createForm.time}
-                    onChange={(e) => setCreateForm(f => ({ ...f, time: e.target.value }))}
-                    className="w-full px-4 py-3 text-base border-2 border-neutral-300 rounded-xl focus:border-black focus:ring-2 focus:ring-black/10 outline-none"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 py-3 text-base font-medium border-2 border-neutral-300 rounded-xl hover:bg-neutral-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={creating}
-                  className="flex-1 py-3 bg-black text-white text-base font-semibold rounded-xl hover:bg-neutral-800 disabled:opacity-60 transition-colors"
-                >
-                  {creating ? 'Creating…' : 'Create'}
+              <input required type="number" min={1} value={createForm.capacity} onChange={(e) => setCreateForm((f) => ({ ...f, capacity: e.target.value }))} className={field} placeholder="Capacity" />
+              <div className="flex gap-2 pt-2">
+                <button type="button" onClick={() => setShowCreate(false)} className="flex-1 py-2 text-sm border border-neutral-300">Cancel</button>
+                <button type="submit" disabled={creating} className="flex-1 py-2 text-sm bg-neutral-950 text-white disabled:opacity-60">
+                  {creating ? 'Saving…' : 'Post event'}
                 </button>
               </div>
             </form>
@@ -280,11 +228,11 @@ export default function AdminDashboard() {
   );
 }
 
-function StatBox({ label, value }: { label: string; value: string | number }) {
+function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="border-2 border-neutral-200 rounded-xl p-5 sm:p-6 bg-white">
-      <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">{label}</p>
-      <p className="text-2xl sm:text-3xl font-bold text-black tabular-nums">{value}</p>
+    <div className="bg-white px-4 py-5">
+      <p className="text-[11px] font-mono tracking-wider text-neutral-500">{label.toUpperCase()}</p>
+      <p className="text-3xl font-semibold tabular-nums mt-1">{value}</p>
     </div>
   );
 }

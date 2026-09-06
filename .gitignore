@@ -1,29 +1,36 @@
 # dependencies
-/node_modules
+node_modules/
 
-# testing
-/coverage
+# Next.js
+frontend-event-scanner/.next/
+frontend-event-scanner/out/
+*.tsbuildinfo
+next-env.d.ts
 
-# debug logs
+# testing / coverage
+coverage/
+
+# env & secrets (keep local; never commit)
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# logs
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-logs
-*.log
 
-# env files (STRICTLY IGNORED)
-.env
-.env*.local
-.env.development
-.env.production
-.env.test
-
-# OS generated files
+# OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
+Desktop.ini
+
+# editors / local tooling
+.vscode/
+.idea/
+*.swp
+.vercel/

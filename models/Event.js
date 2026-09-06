@@ -6,18 +6,27 @@ const eventSchema = new mongoose.Schema({
   location: String,
   date: String,
   time: String,
+  capacity: { type: Number, default: 100, min: 1 },
   attendees: [{
-    // Changed to ObjectId and added a 'ref' to your User model
-    userId: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: 'User' 
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
     },
-    qrCode: String,
-    checkedIn: { 
-      type: Boolean, 
-      default: false 
-    }
-  }]
+    ticketId: String,
+    checkedIn: {
+      type: Boolean,
+      default: false,
+    },
+    registeredAt: { type: Date, default: Date.now },
+    checkedInAt: Date,
+  }],
+  waitlist: [{
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    joinedAt: { type: Date, default: Date.now },
+  }],
 });
 
 module.exports = mongoose.model('Event', eventSchema);
