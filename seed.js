@@ -36,8 +36,8 @@ async function seedDatabase() {
 
     const newEvent = await Event.create({
       title: 'Campus Hackathon 2026',
-      description: 'Annual 24-hour coding challenge',
-      location: 'Main Auditorium',
+      description: 'Annual campus hackathon',
+      location: 'Main Hall',
       date: '2026-04-15',
       time: '09:00 AM',
       capacity: 100

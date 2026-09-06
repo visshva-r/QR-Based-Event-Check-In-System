@@ -208,7 +208,7 @@ export default function AdminDashboard() {
             <form onSubmit={handleCreateEvent} className="space-y-3">
               <input required value={createForm.title} onChange={(e) => setCreateForm((f) => ({ ...f, title: e.target.value }))} className={field} placeholder="Title" />
               <textarea value={createForm.description} onChange={(e) => setCreateForm((f) => ({ ...f, description: e.target.value }))} className={field} placeholder="What it is (optional)" rows={2} />
-              <input required value={createForm.location} onChange={(e) => setCreateForm((f) => ({ ...f, location: e.target.value }))} className={field} placeholder="Hall / lawn / lab" />
+              <input required value={createForm.location} onChange={(e) => setCreateForm((f) => ({ ...f, location: e.target.value }))} className={field} placeholder="Venue" />
               <div className="grid grid-cols-2 gap-3">
                 <input required type="date" value={createForm.date} onChange={(e) => setCreateForm((f) => ({ ...f, date: e.target.value }))} className={field} />
                 <input type="time" value={createForm.time} onChange={(e) => setCreateForm((f) => ({ ...f, time: e.target.value }))} className={field} />
