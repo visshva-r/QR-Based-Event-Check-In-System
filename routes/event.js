@@ -205,44 +205,64 @@ router.post('/checkin', auth(['admin']), async (req, res) => {
       return res.status(400).json({ error: 'Invalid or tampered ticket', status: 'invalid' });
     }
 
-    const event = await Event.findById(payload.eventId);
-    if (!event) return res.status(404).json({ error: 'Event not found', status: 'invalid' });
-
-    const attendee = event.attendees.find(
-      (a) => a.userId && a.userId.toString() === payload.userId && a.ticketId === payload.ticketId
-    );
-
-    if (!attendee) {
-      return res.status(404).json({ error: 'Student is not registered for this event', status: 'invalid' });
+    let userOid;
+    try {
+      userOid = new mongoose.Types.ObjectId(payload.userId);
+    } catch (err) {
+      return res.status(400).json({ error: 'Invalid or tampered ticket', status: 'invalid' });
     }
 
-    if (attendee.checkedIn) {
-      const user = await User.findById(payload.userId).select('name email');
+    const updated = await Event.findOneAndUpdate(
+      {
+        _id: payload.eventId,
+        attendees: {
+          $elemMatch: {
+            userId: userOid,
+            ticketId: payload.ticketId,
+            checkedIn: false,
+          },
+        },
+      },
+      {
+        $set: {
+          'attendees.$.checkedIn': true,
+          'attendees.$.checkedInAt': new Date(),
+        },
+      },
+      { new: true }
+    );
+
+    if (!updated) {
+      const event = await Event.findById(payload.eventId);
+      if (!event) return res.status(404).json({ error: 'Event not found', status: 'invalid' });
+      const attendee = event.attendees.find(
+        (a) => a.userId && a.userId.toString() === payload.userId && a.ticketId === payload.ticketId
+      );
+      if (!attendee || !attendee.checkedIn) {
+        return res.status(404).json({ error: 'Student is not registered for this event', status: 'invalid' });
+      }
+      const existing = await User.findById(payload.userId).select('name email');
       return res.status(400).json({
         error: 'Already checked in',
         status: 'duplicate',
-        attendee: { name: user?.name, email: user?.email },
+        attendee: { name: existing?.name, email: existing?.email },
       });
     }
 
-    attendee.checkedIn = true;
-    attendee.checkedInAt = new Date();
-    await event.save();
-
     const user = await User.findById(payload.userId);
     const log = await CheckInLog.create({
-      eventId: event._id,
+      eventId: updated._id,
       userId: payload.userId,
       ticketId: payload.ticketId,
       scannerId: req.user.id,
       attendeeName: user?.name || 'Unknown',
       attendeeEmail: user?.email || 'Unknown',
-      eventTitle: event.title,
+      eventTitle: updated.title,
     });
 
     const logPayload = {
       _id: log._id,
-      eventId: String(event._id),
+      eventId: String(updated._id),
       ticketId: log.ticketId,
       attendeeName: log.attendeeName,
       attendeeEmail: log.attendeeEmail,
@@ -252,7 +272,7 @@ router.post('/checkin', auth(['admin']), async (req, res) => {
     };
 
     emitToAdmins(req.app, 'checkin', logPayload);
-    emitToAdmins(req.app, 'event-updated', { eventId: String(event._id) });
+    emitToAdmins(req.app, 'event-updated', { eventId: String(updated._id) });
 
     res.json({
       status: 'ok',

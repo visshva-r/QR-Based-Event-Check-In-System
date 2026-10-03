@@ -6,6 +6,19 @@ Students see paper-style passes. Staff get a desk view and a fullscreen door scr
 
 Runs locally. `npm test` checks ticket signatures and waitlist order.
 
+## Live
+
+| Surface | URL |
+|:--------|:----|
+| **API** | https://qr-based-event-check-in-system.onrender.com |
+| **Health** | https://qr-based-event-check-in-system.onrender.com/api/test |
+
+The public event list does not include attendee records or QR payloads. Check-in requires an admin JWT. A second scan of the same pass returns `status: "duplicate"`.
+
+The Next.js app is in `frontend-event-scanner`. Point it at the live API with `NEXT_PUBLIC_API_URL=https://qr-based-event-check-in-system.onrender.com/api`. There is no confirmed frontend deploy for this repo. Do not use a similarly named Vercel URL unless you deployed this app yourself.
+
+Staff attendance is real-time in this codebase: a successful scan writes `CheckInLog` and Socket.io emits `checkin` to the `admin` room. The desk appends that row as it arrives. Secure validation is the HMAC on the QR, checked with a timing-safe compare before any attendance write.
+
 ---
 
 ## Features
@@ -13,10 +26,10 @@ Runs locally. `npm test` checks ticket signatures and waitlist order.
 | Feature | Description |
 |:-------|:------------|
 | **Auth** | Signup always creates a student. Admins come from seed only. JWT expires in 8 hours. |
-| **Signed tickets** | QR payload is `{ eventId, userId, ticketId }` plus HMAC. Tampered codes fail at the door. |
+| **Signed tickets** | QR payload is `{ eventId, userId, ticketId }` plus HMAC-SHA256. Tampered codes fail before check-in. |
 | **In-app passes** | Paper-style pass with name, event, and QR. Registration works even if email fails. |
 | **Capacity + waitlist** | First-come seats. Full events go to a waitlist. Cancel before check-in and the next person gets a pass. |
-| **Live multi-scanner** | Socket.io pushes check-ins to every staff desk. Audit log records who scanned whom and when. |
+| **Real-time attendance** | Socket.io pushes each check-in to every staff desk. `CheckInLog` stores attendee, event, time, and scanner id. A second scan cannot flip `checkedIn` again. |
 | **Per-event admin** | Attendees, waitlist, check-in %, CSV/JSON export per event. |
 
 ---
