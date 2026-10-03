@@ -28,6 +28,16 @@ app.use(cors({
 }));
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.status(200).json({
+    name: 'Gate API',
+    status: 'ok',
+    health: '/api/test',
+    events: '/api/events',
+    note: 'This is the backend. The student/staff UI runs separately (Next.js).',
+  });
+});
+
 app.get('/api/test', (req, res) => {
   res.status(200).json({ message: 'API is awake and working perfectly!' });
 });

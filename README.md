@@ -13,9 +13,7 @@ Runs locally. `npm test` checks ticket signatures and waitlist order.
 | **API** | https://qr-based-event-check-in-system.onrender.com |
 | **Health** | https://qr-based-event-check-in-system.onrender.com/api/test |
 
-The public event list does not include attendee records or QR payloads. Check-in requires an admin JWT. A second scan of the same pass returns `status: "duplicate"`.
-
-The Next.js app is in `frontend-event-scanner`. Point it at the live API with `NEXT_PUBLIC_API_URL=https://qr-based-event-check-in-system.onrender.com/api`. There is no confirmed frontend deploy for this repo. Do not use a similarly named Vercel URL unless you deployed this app yourself.
+Opening the API root returns JSON status (not a website). Use `/api/test` to confirm the service is up. The Next.js app is in `frontend-event-scanner`. Point it at the live API with `NEXT_PUBLIC_API_URL=https://qr-based-event-check-in-system.onrender.com/api`. There is no confirmed frontend deploy for this repo. Do not use a similarly named Vercel URL unless you deployed this app yourself.
 
 Staff attendance is real-time in this codebase: a successful scan writes `CheckInLog` and Socket.io emits `checkin` to the `admin` room. The desk appends that row as it arrives. Secure validation is the HMAC on the QR, checked with a timing-safe compare before any attendance write.
 
