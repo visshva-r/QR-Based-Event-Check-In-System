@@ -10,10 +10,11 @@ Runs locally. `npm test` checks ticket signatures and waitlist order.
 
 | Surface | URL |
 |:--------|:----|
+| **App (frontend)** | https://gate-campus-check-in.vercel.app |
 | **API** | https://qr-based-event-check-in-system.onrender.com |
 | **Health** | https://qr-based-event-check-in-system.onrender.com/api/test |
 
-Opening the API root returns JSON status (not a website). Use `/api/test` to confirm the service is up. The Next.js app is in `frontend-event-scanner`. Point it at the live API with `NEXT_PUBLIC_API_URL=https://qr-based-event-check-in-system.onrender.com/api`. There is no confirmed frontend deploy for this repo. Do not use a similarly named Vercel URL unless you deployed this app yourself.
+The app is the Next.js project in `frontend-event-scanner`, deployed on Vercel with `NEXT_PUBLIC_API_URL=https://qr-based-event-check-in-system.onrender.com/api`. Opening the API root returns JSON status (not a website). Use `/api/test` to confirm the service is up. The API runs on Render's free tier, so the first request after idle can take about a minute.
 
 Staff attendance is real-time in this codebase: a successful scan writes `CheckInLog` and Socket.io emits `checkin` to the `admin` room. The desk appends that row as it arrives. Secure validation is the HMAC on the QR, checked with a timing-safe compare before any attendance write.
 
@@ -73,7 +74,7 @@ FRONTEND_ORIGIN=http://localhost:3000,http://127.0.0.1:3000
 ```
 
 `QR_SECRET` signs tickets. Falls back to `JWT_SECRET` if unset.  
-`FRONTEND_ORIGIN` is the CORS/Socket.io allowlist (comma-separated). Add your deployed frontend URL when needed.
+`FRONTEND_ORIGIN` adds origins to the CORS/Socket.io allowlist (comma-separated). The deployed Vercel app is always allowed; local dev origins are allowed when this is unset.
 
 ```bash
 node seed.js    # optional

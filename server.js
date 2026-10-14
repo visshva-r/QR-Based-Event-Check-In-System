@@ -12,10 +12,16 @@ const authRoutes = require('./routes/auth');
 const eventRoutes = require('./routes/event');
 const adminRoutes = require('./routes/admin');
 
-const allowedOrigins = (process.env.FRONTEND_ORIGIN || 'http://localhost:3000,http://127.0.0.1:3000')
-  .split(',')
-  .map((s) => s.trim())
-  .filter(Boolean);
+// The deployed frontend is always allowed. FRONTEND_ORIGIN (comma-separated)
+// adds more origins; without it, local dev origins are allowed.
+const DEPLOYED_FRONTEND = 'https://gate-campus-check-in.vercel.app';
+const allowedOrigins = [
+  DEPLOYED_FRONTEND,
+  ...(process.env.FRONTEND_ORIGIN || 'http://localhost:3000,http://127.0.0.1:3000')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
+];
 
 const app = express();
 app.set('trust proxy', 1);
