@@ -4,18 +4,21 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast, { Toaster } from 'react-hot-toast';
-import api from '@/lib/api';
+import api, { isApiUnavailable } from '@/lib/api';
 import { setAuth } from '@/lib/auth';
+import ApiStatus from '@/components/api-status';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [apiUnavailable, setApiUnavailable] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setApiUnavailable(false);
     try {
       const response = await api.post('/auth/login', { email, password });
       const { token, user } = response.data;
@@ -29,7 +32,11 @@ export default function LoginPage() {
       if (user?.role === 'admin') router.push('/admin/dashboard');
       else router.push('/student/dashboard');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Could not sign in');
+      if (isApiUnavailable(error)) {
+        setApiUnavailable(true);
+      } else {
+        toast.error(error.response?.data?.error || 'Could not sign in');
+      }
     } finally {
       setLoading(false);
     }
@@ -56,6 +63,11 @@ export default function LoginPage() {
           <p className="lg:hidden font-mono text-sm tracking-[0.22em] mb-10">GATE</p>
           <h2 className="text-2xl font-semibold text-stone-900">Sign in</h2>
           <p className="text-sm text-stone-500 mt-1 mb-8">Students and staff sign in here.</p>
+          {apiUnavailable && (
+            <div className="mb-6">
+              <ApiStatus onRetry={() => document.querySelector<HTMLFormElement>('form')?.requestSubmit()} busy={loading} />
+            </div>
+          )}
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-sm text-stone-600 mb-1">College email</label>
@@ -85,7 +97,7 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full bg-stone-900 text-white py-2.5 text-sm font-medium hover:bg-stone-800 disabled:opacity-60"
             >
-              {loading ? 'Checking…' : 'Continue'}
+              {loading ? 'Checking…' : apiUnavailable ? 'Retry connection' : 'Continue'}
             </button>
           </form>
           <p className="text-sm text-stone-600 mt-6">

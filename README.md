@@ -14,7 +14,7 @@ Runs locally. `npm test` checks ticket signatures and waitlist order.
 | **API** | https://qr-based-event-check-in-system.onrender.com |
 | **Health** | https://qr-based-event-check-in-system.onrender.com/api/test |
 
-The app is the Next.js project in `frontend-event-scanner`, deployed on Vercel with `NEXT_PUBLIC_API_URL=https://qr-based-event-check-in-system.onrender.com/api`. Opening the API root returns JSON status (not a website). Use `/api/test` to confirm the service is up. The API runs on Render's free tier, so the first request after idle can take about a minute.
+The app is the Next.js project in `frontend-event-scanner`, deployed on Vercel with `NEXT_PUBLIC_API_URL=https://qr-based-event-check-in-system.onrender.com/api` (keep the `/api` suffix). Opening the API root returns JSON status (not a website). Use `https://qr-based-event-check-in-system.onrender.com/api/test` to wake and confirm the service is up; for example, `curl https://qr-based-event-check-in-system.onrender.com/api/test`. The API runs on Render's free tier, so the first request after idle can take about a minute. Gate shows a clear waking message and lets users retry without losing their form or session.
 
 Staff attendance is real-time in this codebase: a successful scan writes `CheckInLog` and Socket.io emits `checkin` to the `admin` room. The desk appends that row as it arrives. Secure validation is the HMAC on the QR, checked with a timing-safe compare before any attendance write.
 

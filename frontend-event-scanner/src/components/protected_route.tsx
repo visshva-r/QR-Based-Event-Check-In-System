@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
+import api, { isApiUnavailable } from '@/lib/api';
 import { clearAuth } from '@/lib/auth';
+import ApiStatus from './api-status';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,6 +13,8 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
   const [authorized, setAuthorized] = useState(false);
+  const [apiUnavailable, setApiUnavailable] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -40,22 +43,32 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Prote
           return;
         }
         setAuthorized(true);
-      } catch {
+      } catch (error) {
         if (cancelled) return;
-        clearAuth();
-        router.push('/');
+        if (isApiUnavailable(error)) {
+          setApiUnavailable(true);
+        } else {
+          clearAuth();
+          router.push('/');
+        }
       }
     };
 
     verify();
     return () => { cancelled = true; };
-  }, [router, requireAdmin]);
+  }, [router, requireAdmin, retryKey]);
 
   if (!authorized) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4">
-        <div className="size-10 border-2 border-neutral-300 border-t-black rounded-full animate-spin" aria-hidden />
-        <p className="text-sm font-medium text-neutral-600">Checking your pass…</p>
+        {!apiUnavailable && <div className="size-10 border-2 border-neutral-300 border-t-black rounded-full animate-spin" aria-hidden />}
+        {apiUnavailable ? (
+          <div className="w-full max-w-sm">
+            <ApiStatus onRetry={() => { setApiUnavailable(false); setRetryKey((key) => key + 1); }} />
+          </div>
+        ) : (
+          <p className="text-sm font-medium text-neutral-600">Checking your pass…</p>
+        )}
       </div>
     );
   }

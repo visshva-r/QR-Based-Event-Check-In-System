@@ -1,16 +1,22 @@
 import axios from 'axios';
 import { clearAuth } from './auth';
 
-const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://qr-based-event-check-in-system.onrender.com/api';
+export const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://qr-based-event-check-in-system.onrender.com/api';
 
 export const socketUrl = apiBase.replace(/\/api\/?$/, '');
 
 const api = axios.create({
   baseURL: apiBase,
+  timeout: 70000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+export function isApiUnavailable(error: unknown) {
+  if (!axios.isAxiosError(error)) return false;
+  return !error.response || error.response.status >= 500;
+}
 
 api.interceptors.request.use(
   (config) => {
