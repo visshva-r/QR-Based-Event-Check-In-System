@@ -4,9 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast, { Toaster } from 'react-hot-toast';
-import api from '@/lib/api';
-import { getApiErrorMessage } from '@/lib/api';
-import ApiStatus from '@/components/api_status';
+import api, { isApiUnavailable } from '@/lib/api';
+import ApiStatus from '@/components/api-status';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -14,11 +13,13 @@ export default function RegisterPage() {
   const [studentId, setStudentId] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [apiUnavailable, setApiUnavailable] = useState(false);
   const router = useRouter();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setApiUnavailable(false);
     try {
       await api.post('/auth/register', {
         name,
@@ -28,8 +29,12 @@ export default function RegisterPage() {
       });
       toast.success('Account ready. Sign in to grab your passes.');
       router.push('/');
-    } catch (error: unknown) {
-      toast.error(getApiErrorMessage(error, 'Could not create account'));
+    } catch (error: any) {
+      if (isApiUnavailable(error)) {
+        setApiUnavailable(true);
+      } else {
+        toast.error(error.response?.data?.error || 'Could not create account');
+      }
     } finally {
       setLoading(false);
     }
@@ -44,6 +49,11 @@ export default function RegisterPage() {
         <p className="font-mono text-sm tracking-[0.22em] mb-10">GATE</p>
         <h1 className="text-2xl font-semibold text-stone-900">Student account</h1>
         <p className="text-sm text-stone-500 mt-1 mb-8">Door staff accounts are issued by the college, not this form.</p>
+        {apiUnavailable && (
+          <div className="mb-6">
+            <ApiStatus onRetry={() => document.querySelector<HTMLFormElement>('form')?.requestSubmit()} busy={loading} />
+          </div>
+        )}
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
             <label className="block text-sm text-stone-600 mb-1">Full name</label>
@@ -62,16 +72,13 @@ export default function RegisterPage() {
             <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className={field} />
           </div>
           <button type="submit" disabled={loading} className="w-full bg-stone-900 text-white py-2.5 text-sm font-medium hover:bg-stone-800 disabled:opacity-60">
-            {loading ? 'Creating…' : 'Create account'}
+            {loading ? 'Creating…' : apiUnavailable ? 'Retry connection' : 'Create account'}
           </button>
         </form>
         <p className="text-sm text-stone-600 mt-6">
           Already have an account?{' '}
           <Link href="/" className="text-stone-900 underline underline-offset-2">Sign in</Link>
         </p>
-        <div className="mt-4">
-          <ApiStatus />
-        </div>
       </div>
     </div>
   );
