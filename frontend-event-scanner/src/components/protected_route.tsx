@@ -2,8 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
+import { getWithWakeRetry } from '@/lib/api';
 import { clearAuth } from '@/lib/auth';
+
+interface AuthMeResponse {
+  role: string;
+  id: string;
+  email: string;
+}
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -25,7 +31,7 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Prote
       }
 
       try {
-        const { data } = await api.get('/auth/me');
+        const { data } = await getWithWakeRetry<AuthMeResponse>('/auth/me');
         if (cancelled) return;
         localStorage.setItem('userRole', data.role);
         localStorage.setItem('userId', data.id);

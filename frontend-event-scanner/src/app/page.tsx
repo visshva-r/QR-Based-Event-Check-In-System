@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast, { Toaster } from 'react-hot-toast';
-import api from '@/lib/api';
+import api, { getApiErrorMessage } from '@/lib/api';
 import { setAuth } from '@/lib/auth';
+import ApiStatus from '@/components/api_status';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -28,8 +29,8 @@ export default function LoginPage() {
       });
       if (user?.role === 'admin') router.push('/admin/dashboard');
       else router.push('/student/dashboard');
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Could not sign in');
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, 'Could not sign in'));
     } finally {
       setLoading(false);
     }
@@ -94,6 +95,9 @@ export default function LoginPage() {
               Get a pass account
             </Link>
           </p>
+          <div className="mt-4">
+            <ApiStatus />
+          </div>
         </div>
       </section>
     </div>

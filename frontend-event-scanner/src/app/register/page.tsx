@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast, { Toaster } from 'react-hot-toast';
 import api from '@/lib/api';
+import { getApiErrorMessage } from '@/lib/api';
+import ApiStatus from '@/components/api_status';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -26,8 +28,8 @@ export default function RegisterPage() {
       });
       toast.success('Account ready. Sign in to grab your passes.');
       router.push('/');
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Could not create account');
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, 'Could not create account'));
     } finally {
       setLoading(false);
     }
@@ -67,6 +69,9 @@ export default function RegisterPage() {
           Already have an account?{' '}
           <Link href="/" className="text-stone-900 underline underline-offset-2">Sign in</Link>
         </p>
+        <div className="mt-4">
+          <ApiStatus />
+        </div>
       </div>
     </div>
   );
